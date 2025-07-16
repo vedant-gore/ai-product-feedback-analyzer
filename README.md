@@ -28,8 +28,6 @@ Summary: Crash issue during photo sharing.
 Sentiment: Mixed (Positive UI, negative stability).
 Suggested Action: Investigate crash on sharing functionality.
 
-
-✔️ **No JSON**  
 ✔️ **Plain text insights**  
 ✔️ **LLM-level summarization** without the cloud
 
