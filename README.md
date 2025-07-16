@@ -65,11 +65,14 @@ User Feedback → Spring AI PromptTemplate → ChatClient → Ollama (TinyLlama)
 1. **Pull the model**  
 ```bash
 ollama pull tinyllama
-
+```
 2. **Start the model server**
+```bash
 ollama run tinyllama
-
+```
 3. **Clone & run the app**
+```bash
 git clone https://github.com/vedant-gore/ai-feedback-analyzer.git
 cd ai-feedback-analyzer
 docker-compose up --build
+```
