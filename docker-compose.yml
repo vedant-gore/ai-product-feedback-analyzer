@@ -1,0 +1,139 @@
+services:
+  service-registry:
+    build: ./service-registry
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - ai-feedback-app-network
+
+  user-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0000
+      POSTGRES_DB: userdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - user-data:/var/lib/postgresql/data
+    networks:
+      - ai-feedback-app-network
+
+  feedback-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0000
+      POSTGRES_DB: feedbackdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - feedback-data:/var/lib/postgresql/data
+    networks:
+      - ai-feedback-app-network
+
+  user-service:
+    build: ./user-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/userdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 0000
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      EUREKA_INSTANCE_HOSTNAME: user-service
+      SPRING_CLOUD_LOADBALANCER_RETRY_ENABLED: true
+    depends_on:
+      - user-db
+      - service-registry
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    networks:
+      - ai-feedback-app-network
+
+  feedback-service:
+    build: ./feedback-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://feedback-db:5432/feedbackdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 0000
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      EUREKA_INSTANCE_HOSTNAME: feedback-service
+      SPRING_CLOUD_LOADBALANCER_RETRY_ENABLED: true
+    depends_on:
+      - feedback-db
+      - service-registry
+    restart: on-failure
+    ports:
+      - "8090:8090"
+    networks:
+      - ai-feedback-app-network
+
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      EUREKA_INSTANCE_HOSTNAME: api-gateway
+      SPRING_CLOUD_LOADBALANCER_RETRY_ENABLED: true
+    depends_on:
+      - service-registry
+      - feedback-service
+      - user-service
+    restart: on-failure
+    ports:
+      - "8081:8765"
+    networks:
+      - ai-feedback-app-network
+
+  ai-service:
+    build: ./ai-service
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      EUREKA_INSTANCE_HOSTNAME: ai-feedback-service
+      SPRING_AI_OLLAMA_BASE-URL: http://ollama:11434
+      SPRING_AI_OLLAMA_MODEL: tinyllama
+    depends_on:
+      ollama:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+      feedback-service:
+        condition: service_started
+    restart: on-failure
+    ports:
+      - "8282:8282"
+    networks:
+      - ai-feedback-app-network
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    entrypoint: [ "ollama", "serve" ]
+    volumes:
+      - ollama-models:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - ai-feedback-app-network
+    healthcheck:
+      test: [ "CMD", "ollama", "list" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:11434" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 10s
+
+
+volumes:
+  user-data:
+  feedback-data:
+  ollama-models:
+
+networks:
+  ai-feedback-app-network:
