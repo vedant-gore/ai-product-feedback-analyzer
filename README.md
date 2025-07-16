@@ -1,11 +1,5 @@
 # 🧠 AI Product Feedback Analyzer
 
-   ___    ___      _          _        _               _              
-  / _ \  | _ \_  _| |_ ___ __| |_  ___| |__  _ __ _  _| |_ ___  _ __  
- | (_) | |   / || |  _/ -_) _| ' \/ -_) '_ \| '_ \ || |  _/ _ \| '_ \ 
-  \___/  |_|_\\_,_|\__\___\__|_||_\___|_.__/| .__/\_,_|\__\___/| .__/ 
-                                           |_|                 |_|    
-
 > ✨ Summarize user/product feedback using local AI  
 > 🤖 Powered by **TinyLlama** via Ollama + Spring AI  
 > 🐳 Fully **Dockerized** and **100% offline** — No API keys, No cloud, No limits
